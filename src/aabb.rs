@@ -12,6 +12,9 @@ fn polygon_aabb(polygon: &[Vec2]) -> (f32, f32, f32, f32) {
 }
 
 pub fn aabb_overlap(poly_a: &[Vec2], poly_b: &[Vec2]) -> bool {
+    if poly_a.is_empty() || poly_b.is_empty() {
+        return false;
+    }
     let a = polygon_aabb(poly_a);
     let b = polygon_aabb(poly_b);
     let (a_min_x, a_min_y, a_max_x, a_max_y) = a;
