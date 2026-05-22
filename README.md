@@ -4,6 +4,8 @@ A 2D physics engine written in Rust. It currently supports collision detection, 
 
 Originally prototyped in Python (`/python`), now being rewritten in Rust for performance and as a learning exercise.
 
+![Physics Engine Demo](media/demo.gif)
+
 ## What works right now
 
 - **AABB overlap** — fast bounding box pre-check to skip expensive math
@@ -43,4 +45,3 @@ See [roadmap.md](roadmap.md) for the full plan. Short version:
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md).
-
