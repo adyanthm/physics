@@ -1,6 +1,6 @@
 # physics engine
 
-A 2D physics engine written in Rust. Right now it only does collision detection — the physics side (velocity, forces, constraints) is next on the list.
+A 2D physics engine written in Rust. It currently supports collision detection, collision resolution, and basic physics (velocity, gravity, restitution).
 
 Originally prototyped in Python (`/python`), now being rewritten in Rust for performance and as a learning exercise.
 
@@ -20,7 +20,7 @@ cd physics
 cargo run
 ```
 
-`cargo run` prints a demo that runs through every algorithm.
+`cargo run` opens an interactive sandbox where you can try out the falling box and platformer demos.
 
 ```
 cargo test
@@ -32,8 +32,8 @@ Runs the test suite — covers every public function.
 
 See [roadmap.md](roadmap.md) for the full plan. Short version:
 
-- [ ] Collision resolution (push objects apart using MTV)
-- [ ] Velocity, gravity, basic integration
+- [x] Collision resolution (push objects apart using MTV)
+- [x] Velocity, gravity, basic integration
 - [ ] Continuous collision detection (prevent tunneling)
 - [ ] Contact points and impulse resolution
 - [ ] Spatial partitioning (quadtree / grid)

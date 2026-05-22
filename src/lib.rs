@@ -1,13 +1,16 @@
 pub mod aabb;
 pub mod concave;
+pub mod demos;
 pub mod point;
 pub mod sat;
 pub mod vectors;
+pub mod velocity;
 pub use aabb::aabb_overlap;
-pub use point::point_polygon;
-pub use sat::{polygon_collision, advanced_collision};
 pub use concave::polygon_concave;
+pub use point::point_polygon;
+pub use sat::{advanced_collision, polygon_collision, resolve_pos, resolve_pos_static};
 pub use vectors::{Vec2, dot, normalize};
+pub use velocity::{Body, GRAVITY, resolve_velocity, update};
 
 #[cfg(test)]
 mod tests {
@@ -27,8 +30,12 @@ mod tests {
 
     fn l_shape() -> Vec<Vec2> {
         vec![
-            (0.0, 0.0), (3.0, 0.0), (3.0, 1.0),
-            (1.0, 1.0), (1.0, 3.0), (0.0, 3.0),
+            (0.0, 0.0),
+            (3.0, 0.0),
+            (3.0, 1.0),
+            (1.0, 1.0),
+            (1.0, 3.0),
+            (0.0, 3.0),
         ]
     }
 
@@ -128,7 +135,8 @@ mod tests {
     fn mtv_resolves_overlap() {
         let (hit, normal, depth) = advanced_collision(&square(), &offset_square());
         assert!(hit);
-        let resolved: Vec<Vec2> = offset_square().iter()
+        let resolved: Vec<Vec2> = offset_square()
+            .iter()
             .map(|&(x, y)| (x + normal.0 * depth, y + normal.1 * depth))
             .collect();
         assert!(!polygon_collision(&square(), &resolved));

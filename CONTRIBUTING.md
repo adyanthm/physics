@@ -12,7 +12,9 @@ src/
   sat.rs       — separating axis theorem (convex), MTV calculation
   concave.rs   — concave polygon collision (vertex containment + edge intersection)
   point.rs     — point-in-polygon via ray casting
-  main.rs      — runnable demo that exercises every algorithm
+  velocity.rs  — body physics, gravity, and velocity resolution
+  demos/       — interactive examples (platformer, falling box)
+  main.rs      — graphical sandbox entry point
 ```
 
 ## How SAT works

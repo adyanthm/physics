@@ -70,7 +70,7 @@ pub fn advanced_collision(poly1: &[Vec2], poly2: &[Vec2]) -> (bool, Vec2, f32) {
         let (min_a, max_a) = project_polygon(axis, poly1);
         let (min_b, max_b) = project_polygon(axis, poly2);
         let overlap_amount = max_a.min(max_b) - min_a.max(min_b);
-        if overlap_amount <= 0.0 {
+        if overlap_amount <= 0.001 {
             return (false, (0.0, 0.0), 0.0);
         }
         if overlap_amount < smallest_overlap {
@@ -86,4 +86,23 @@ pub fn advanced_collision(poly1: &[Vec2], poly2: &[Vec2]) -> (bool, Vec2, f32) {
         smallest_axis.1 = -smallest_axis.1;
     }
     (true, smallest_axis, smallest_overlap)
+}
+
+pub fn resolve_pos(pos1: &mut Vec2, pos2: &mut Vec2, normal: Vec2, depth: f32) {
+    if depth <= 0.0 {
+        return;
+    }
+    let correction = (normal.0 * depth, normal.1 * depth);
+    pos1.0 -= correction.0 * 0.5;
+    pos1.1 -= correction.1 * 0.5;
+    pos2.0 += correction.0 * 0.5;
+    pos2.1 += correction.1 * 0.5;
+}
+
+pub fn resolve_pos_static(pos1: &mut Vec2, normal: Vec2, depth: f32) {
+    if depth <= 0.0 {
+        return;
+    }
+    pos1.0 -= normal.0 * depth;
+    pos1.1 -= normal.1 * depth;
 }
