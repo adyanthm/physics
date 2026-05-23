@@ -1,5 +1,5 @@
 use crate::Vec2;
-fn polygon_aabb(polygon: &[Vec2]) -> (f32, f32, f32, f32) {
+pub fn polygon_aabb(polygon: &[Vec2]) -> (f32, f32, f32, f32) {
     let (mut min_x, mut min_y) = polygon[0];
     let (mut max_x, mut max_y) = polygon[0];
     for &(x, y) in polygon {

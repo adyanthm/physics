@@ -1,5 +1,5 @@
 use crate::{Vec2, aabb_overlap, dot, normalize};
-fn project_polygon(axis: Vec2, polygon: &[Vec2]) -> (f32, f32) {
+pub fn project_polygon(axis: Vec2, polygon: &[Vec2]) -> (f32, f32) {
     if polygon.is_empty() {
         return (0.0, 0.0);
     }
@@ -17,7 +17,7 @@ fn overlap(min_a: f32, min_b: f32, max_a: f32, max_b: f32) -> bool {
     max_a >= min_b && max_b >= min_a
 }
 
-fn polygon_axes(polygon: &[Vec2]) -> Vec<Vec2> {
+pub fn polygon_axes(polygon: &[Vec2]) -> Vec<Vec2> {
     let mut axes = Vec::new();
     for i in 0..polygon.len() {
         let (p1x, p1y) = polygon[i];

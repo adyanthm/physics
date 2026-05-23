@@ -1,4 +1,5 @@
 pub mod aabb;
+pub mod ccd;
 pub mod concave;
 pub mod demos;
 pub mod point;
@@ -11,6 +12,7 @@ pub use point::point_polygon;
 pub use sat::{advanced_collision, polygon_collision, resolve_pos, resolve_pos_static};
 pub use vectors::{Vec2, dot, normalize};
 pub use velocity::{Body, GRAVITY, resolve_velocity, update};
+pub use ccd::{fast_poly_collide};
 
 #[cfg(test)]
 mod tests {
