@@ -9,7 +9,7 @@ pub mod velocity;
 pub use aabb::aabb_overlap;
 pub use concave::polygon_concave;
 pub use point::point_polygon;
-pub use sat::{advanced_collision, polygon_collision, resolve_pos, resolve_pos_static};
+pub use sat::{Collision, advanced_collision, polygon_collision, resolve_pos, resolve_pos_static};
 pub use vectors::{Vec2, dot, normalize};
 pub use velocity::{Body, GRAVITY, resolve_velocity, update};
 pub use ccd::{fast_poly_collide};
@@ -128,27 +128,24 @@ mod tests {
 
     #[test]
     fn mtv_returns_collision() {
-        let (hit, _normal, depth) = advanced_collision(&square(), &offset_square());
-        assert!(hit);
-        assert!(depth > 0.0);
+        let result = advanced_collision(&square(), &offset_square());
+        assert!(result.is_some());
+        assert!(result.unwrap().depth > 0.0);
     }
 
     #[test]
     fn mtv_resolves_overlap() {
-        let (hit, normal, depth) = advanced_collision(&square(), &offset_square());
-        assert!(hit);
-        let resolved: Vec<Vec2> = offset_square()
+        let Collision { normal, depth } = advanced_collision(&square(), &offset_square()).unwrap();
+        let resolved: Vec<Vec2> = square()
             .iter()
             .map(|&(x, y)| (x + normal.0 * depth, y + normal.1 * depth))
             .collect();
-        assert!(!polygon_collision(&square(), &resolved));
+        assert!(!polygon_collision(&resolved, &offset_square()));
     }
 
     #[test]
     fn mtv_no_collision() {
-        let (hit, _, depth) = advanced_collision(&square(), &far_square());
-        assert!(!hit);
-        assert_eq!(depth, 0.0);
+        assert!(advanced_collision(&square(), &far_square()).is_none());
     }
 
     // --- polygon_concave ---

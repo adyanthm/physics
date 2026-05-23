@@ -54,15 +54,11 @@ pub async fn run() {
 
         // collision : player, platform
         for platform in &platforms {
-            let (hit, normal, depth) = advanced_collision(&player, platform);
+            if let Some(c) = advanced_collision(&player, platform) {
+                resolve_pos_static(&mut body.pos, c.normal, c.depth);
+                resolve_velocity(&mut body.vel, c.normal, 0.0);
 
-            if hit {
-                resolve_pos_static(&mut body.pos, normal, depth);
-
-                let response_normal = (-normal.0, -normal.1);
-                resolve_velocity(&mut body.vel, response_normal, 0.0);
-
-                if response_normal.1 < -0.5 {
+                if c.normal.1 < -0.5 {
                     grounded = true;
                     body.vel.1 = 0.0;
                     body.pos.1 -= 0.1;

@@ -31,13 +31,12 @@ pub async fn run() {
         update(&mut body, dt);
 
         let player = rect(body.pos, 50.0);
-        let (hit, normal, depth) = advanced_collision(&player, &floor);
-        if hit {
-            resolve_pos_static(&mut body.pos, normal, depth);
-            let response_normal = (-normal.0, -normal.1);
-            resolve_velocity(&mut body.vel, response_normal, 0.0);
+        let collision = advanced_collision(&player, &floor);
+        if let Some(c) = &collision {
+            resolve_pos_static(&mut body.pos, c.normal, c.depth);
+            resolve_velocity(&mut body.vel, c.normal, 0.0);
 
-            if response_normal.1 < -0.5 {
+            if c.normal.1 < -0.5 {
                 body.pos.1 -= 0.1;
                 body.vel.1 = 0.0;
             }
@@ -58,12 +57,12 @@ pub async fn run() {
             3.0,
             RED,
         );
-        if hit {
+        if let Some(c) = &collision {
             draw_line(
                 body.pos.0 + 25.0,
                 body.pos.1 + 25.0,
-                body.pos.0 + 25.0 + normal.0 * 100.0,
-                body.pos.1 + 25.0 + normal.1 * 100.0,
+                body.pos.0 + 25.0 + c.normal.0 * 100.0,
+                body.pos.1 + 25.0 + c.normal.1 * 100.0,
                 4.0,
                 YELLOW,
             );
