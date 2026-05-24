@@ -27,18 +27,20 @@ pub async fn run() {
 
     loop {
         clear_background(BLACK);
-        let dt = get_frame_time() * 0.5;
+        let dt = get_frame_time();
         update(&mut body, dt);
 
         let player = rect(body.pos, 50.0);
         let collision = advanced_collision(&player, &floor);
         if let Some(c) = &collision {
             resolve_pos_static(&mut body.pos, c.normal, c.depth);
-            resolve_velocity(&mut body.vel, c.normal, 0.0);
+            resolve_velocity(&mut body.vel, c.normal, 0.7);
 
             if c.normal.y < -0.5 {
+                if body.vel.y.abs() < 50.0 {
+                    body.vel.y = 0.0;
+                }
                 body.pos.y -= 0.1;
-                body.vel.y = 0.0;
             }
         }
 

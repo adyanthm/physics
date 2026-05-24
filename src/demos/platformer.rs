@@ -59,8 +59,10 @@ pub async fn run() {
                 resolve_velocity(&mut body.vel, c.normal, 0.0);
 
                 if c.normal.y < -0.5 {
-                    grounded = true;
-                    body.vel.y = 0.0;
+                    if body.vel.y.abs() < 100.0 {
+                        grounded = true;
+                        body.vel.y = 0.0;
+                    }
                     body.pos.y -= 0.1;
                 }
 
