@@ -4,10 +4,10 @@ use crate::{Body, Vec2, advanced_collision, resolve_pos_static, resolve_velocity
 
 pub fn rect(pos: Vec2, w: f32, h: f32) -> Vec<Vec2> {
     vec![
-        (pos.0, pos.1),
-        (pos.0 + w, pos.1),
-        (pos.0 + w, pos.1 + h),
-        (pos.0, pos.1 + h),
+        Vec2::new(pos.x, pos.y),
+        Vec2::new(pos.x + w, pos.y),
+        Vec2::new(pos.x + w, pos.y + h),
+        Vec2::new(pos.x, pos.y + h),
     ]
 }
 
@@ -17,21 +17,21 @@ pub async fn run() {
     let jump_force = 500.0;
 
     let mut body = Body {
-        pos: (100.0, 100.0),
-        vel: (0.0, 0.0),
+        pos: Vec2::new(100.0, 100.0),
+        vel: Vec2::ZERO,
         use_gravity: true,
     };
 
     let platforms = vec![
         // floor
-        rect((50.0, 500.0), 750.0, 50.0),
+        rect(Vec2::new(50.0, 500.0), 750.0, 50.0),
         // floating platforms
-        rect((200.0, 400.0), 100.0, 20.0),
-        rect((400.0, 300.0), 150.0, 20.0),
-        rect((650.0, 200.0), 100.0, 20.0),
+        rect(Vec2::new(200.0, 400.0), 100.0, 20.0),
+        rect(Vec2::new(400.0, 300.0), 150.0, 20.0),
+        rect(Vec2::new(650.0, 200.0), 100.0, 20.0),
         // wall
-        rect((50.0, 100.0), 50.0, 400.0),
-        rect((750.0, 100.0), 50.0, 400.0),
+        rect(Vec2::new(50.0, 100.0), 50.0, 400.0),
+        rect(Vec2::new(750.0, 100.0), 50.0, 400.0),
     ];
 
     loop {
@@ -41,11 +41,11 @@ pub async fn run() {
         let mut grounded = false;
 
         if is_key_down(KeyCode::Right) || is_key_down(KeyCode::D) {
-            body.vel.0 = speed;
+            body.vel.x = speed;
         } else if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
-            body.vel.0 = -speed;
+            body.vel.x = -speed;
         } else {
-            body.vel.0 *= 0.8;
+            body.vel.x *= 0.8;
         }
 
         // apply the physics.
@@ -58,10 +58,10 @@ pub async fn run() {
                 resolve_pos_static(&mut body.pos, c.normal, c.depth);
                 resolve_velocity(&mut body.vel, c.normal, 0.0);
 
-                if c.normal.1 < -0.5 {
+                if c.normal.y < -0.5 {
                     grounded = true;
-                    body.vel.1 = 0.0;
-                    body.pos.1 -= 0.1;
+                    body.vel.y = 0.0;
+                    body.pos.y -= 0.1;
                 }
 
                 player = rect(body.pos, player_size, player_size);
@@ -69,16 +69,16 @@ pub async fn run() {
         }
 
         if is_key_pressed(KeyCode::Space) && grounded {
-            body.vel.1 -= jump_force;
+            body.vel.y -= jump_force;
         }
 
-        draw_rectangle(body.pos.0, body.pos.1, player_size, player_size, BLUE);
+        draw_rectangle(body.pos.x, body.pos.y, player_size, player_size, BLUE);
 
         for platform in &platforms {
-            let (x, y) = platform[0];
-            let size_x = platform[1].0 - platform[0].0;
-            let size_y = platform[3].1 - platform[0].1;
-            draw_rectangle(x, y, size_x, size_y, GRAY);
+            let start = platform[0];
+            let width = platform[1].x - platform[0].x;
+            let height = platform[3].y - platform[0].y;
+            draw_rectangle(start.x, start.y, width, height, GRAY);
         }
 
         draw_text("Platformer Demo", 20.0, 30.0, 30.0, WHITE);

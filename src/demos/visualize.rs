@@ -4,25 +4,25 @@ use crate::{Body, Vec2, advanced_collision, resolve_pos_static, resolve_velocity
 
 pub fn rect(pos: Vec2, size: f32) -> Vec<Vec2> {
     vec![
-        (pos.0, pos.1),
-        (pos.0 + size, pos.1),
-        (pos.0 + size, pos.1 + size),
-        (pos.0, pos.1 + size),
+        Vec2::new(pos.x, pos.y),
+        Vec2::new(pos.x + size, pos.y),
+        Vec2::new(pos.x + size, pos.y + size),
+        Vec2::new(pos.x, pos.y + size),
     ]
 }
 
 pub async fn run() {
     let mut body = Body {
-        pos: (350.0, 50.0),
-        vel: (0.0, 0.0),
+        pos: Vec2::new(350.0, 50.0),
+        vel: Vec2::ZERO,
         use_gravity: true,
     };
 
     let floor = [
-        (100.0, 500.0),
-        (700.0, 500.0),
-        (700.0, 520.0),
-        (100.0, 520.0),
+        Vec2::new(100.0, 500.0),
+        Vec2::new(700.0, 500.0),
+        Vec2::new(700.0, 520.0),
+        Vec2::new(100.0, 520.0),
     ];
 
     loop {
@@ -36,33 +36,33 @@ pub async fn run() {
             resolve_pos_static(&mut body.pos, c.normal, c.depth);
             resolve_velocity(&mut body.vel, c.normal, 0.0);
 
-            if c.normal.1 < -0.5 {
-                body.pos.1 -= 0.1;
-                body.vel.1 = 0.0;
+            if c.normal.y < -0.5 {
+                body.pos.y -= 0.1;
+                body.vel.y = 0.0;
             }
         }
 
         // player
-        draw_rectangle(body.pos.0, body.pos.1, 50.0, 50.0, BLUE);
+        draw_rectangle(body.pos.x, body.pos.y, 50.0, 50.0, BLUE);
 
         // floor
         draw_rectangle(100.0, 500.0, 600.0, 20.0, GRAY);
 
         // velocity vector
         draw_line(
-            body.pos.0 + 25.0,
-            body.pos.1 + 25.0,
-            body.pos.0 + 25.0 + body.vel.0 * 0.1,
-            body.pos.1 + 25.0 + body.vel.1 * 0.1,
+            body.pos.x + 25.0,
+            body.pos.y + 25.0,
+            body.pos.x + 25.0 + body.vel.x * 0.1,
+            body.pos.y + 25.0 + body.vel.y * 0.1,
             3.0,
             RED,
         );
         if let Some(c) = &collision {
             draw_line(
-                body.pos.0 + 25.0,
-                body.pos.1 + 25.0,
-                body.pos.0 + 25.0 + c.normal.0 * 100.0,
-                body.pos.1 + 25.0 + c.normal.1 * 100.0,
+                body.pos.x + 25.0,
+                body.pos.y + 25.0,
+                body.pos.x + 25.0 + c.normal.x * 100.0,
+                body.pos.y + 25.0 + c.normal.y * 100.0,
                 4.0,
                 YELLOW,
             );

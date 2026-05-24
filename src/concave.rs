@@ -1,9 +1,7 @@
 use crate::{Vec2, aabb_overlap, point_polygon};
 
-fn point_side((ax, ay): Vec2, (bx, by): Vec2, (cx, cy): Vec2) -> f32 {
-    let ab = (bx - ax, by - ay);
-    let ac = (cx - ax, cy - ay);
-    ab.0 * ac.1 - ab.1 * ac.0
+fn point_side(a: Vec2, b: Vec2, c: Vec2) -> f32 {
+    (b - a).cross(c - a)
 }
 
 fn segment_intersect(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
@@ -11,22 +9,12 @@ fn segment_intersect(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
     let ab_d = point_side(a, b, d);
     let cd_a = point_side(c, d, a);
     let cd_b = point_side(c, d, b);
-    (ab_c > 0.0) != (ab_d > 0.0) && (cd_a > 0.0) != (cd_b > 0.0)
+    (ab_c * ab_d <= 0.0) && (cd_a * cd_b <= 0.0)
 }
 
 pub fn polygon_concave(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
     if !aabb_overlap(poly1, poly2) {
         return false;
-    }
-    for &(x, y) in poly1 {
-        if point_polygon(x, y, poly2) {
-            return true;
-        }
-    }
-    for &(x, y) in poly2 {
-        if point_polygon(x, y, poly1) {
-            return true;
-        }
     }
     for i in 0..poly1.len() {
         let a = poly1[i];
@@ -39,5 +27,16 @@ pub fn polygon_concave(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
             }
         }
     }
+    for &v in poly1 {
+        if point_polygon(v, poly2) {
+            return true;
+        }
+    }
+    for &v in poly2 {
+        if point_polygon(v, poly1) {
+            return true;
+        }
+    }
+
     false
 }

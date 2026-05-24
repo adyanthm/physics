@@ -1,4 +1,4 @@
-use crate::{Vec2, aabb_overlap, dot, normalize};
+use crate::{Vec2, aabb_overlap};
 
 pub struct Collision {
     pub normal: Vec2,
@@ -8,10 +8,10 @@ pub fn project_polygon(axis: Vec2, polygon: &[Vec2]) -> (f32, f32) {
     if polygon.is_empty() {
         return (0.0, 0.0);
     }
-    let mut min = dot(polygon[0], axis);
+    let mut min = polygon[0].dot(axis);
     let mut max = min;
     for &point in polygon {
-        let projection = dot(point, axis);
+        let projection = point.dot(axis);
         min = min.min(projection);
         max = max.max(projection);
     }
@@ -25,10 +25,8 @@ fn overlap(min_a: f32, min_b: f32, max_a: f32, max_b: f32) -> bool {
 pub fn polygon_axes(polygon: &[Vec2]) -> Vec<Vec2> {
     let mut axes = Vec::new();
     for i in 0..polygon.len() {
-        let (p1x, p1y) = polygon[i];
-        let (p2x, p2y) = polygon[(i + 1) % polygon.len()];
-        let edge = (p1x - p2x, p1y - p2y);
-        let axis = normalize(-edge.1, edge.0);
+        let edge = polygon[i] - polygon[(i + 1) % polygon.len()];
+        let axis = edge.perp().normalize();
         axes.push(axis);
     }
     axes
@@ -52,21 +50,20 @@ pub fn polygon_collision(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
 }
 
 fn polygon_center(polygon: &[Vec2]) -> Vec2 {
-    let mut total = (0.0, 0.0);
-    for &(x, y) in polygon {
-        total.0 += x;
-        total.1 += y;
-    }
     if polygon.is_empty() {
-        return (0.0, 0.0);
+        return Vec2::ZERO;
     }
-    let len = polygon.len() as f32;
-    (total.0 / len, total.1 / len)
+    let mut total = Vec2::ZERO;
+    for &v in polygon {
+        total += v;
+    }
+
+    total / polygon.len() as f32
 }
 
 pub fn advanced_collision(poly1: &[Vec2], poly2: &[Vec2]) -> Option<Collision> {
     let mut smallest_overlap = f32::INFINITY;
-    let mut smallest_axis = (0.0, 0.0);
+    let mut smallest_axis = Vec2::ZERO;
     if !aabb_overlap(poly1, poly2) {
         return None;
     }
@@ -83,12 +80,9 @@ pub fn advanced_collision(poly1: &[Vec2], poly2: &[Vec2]) -> Option<Collision> {
             smallest_axis = axis;
         }
     }
-    let center1 = polygon_center(poly1);
-    let center2 = polygon_center(poly2);
-    let direction = (center2.0 - center1.0, center2.1 - center1.1);
-    if dot(direction, smallest_axis) > 0.0 {
-        smallest_axis.0 = -smallest_axis.0;
-        smallest_axis.1 = -smallest_axis.1;
+    let direction = polygon_center(poly2) - polygon_center(poly1);
+    if direction.dot(smallest_axis) > 0.0 {
+        smallest_axis = -smallest_axis;
     }
     Some(Collision {
         normal: smallest_axis,
@@ -100,17 +94,14 @@ pub fn resolve_pos(pos1: &mut Vec2, pos2: &mut Vec2, normal: Vec2, depth: f32) {
     if depth <= 0.0 {
         return;
     }
-    let correction = (normal.0 * depth, normal.1 * depth);
-    pos1.0 += correction.0 * 0.5;
-    pos1.1 += correction.1 * 0.5;
-    pos2.0 -= correction.0 * 0.5;
-    pos2.1 -= correction.1 * 0.5;
+    let correction = normal * depth;
+    *pos1 += correction * 0.5;
+    *pos2 -= correction * 0.5;
 }
 
 pub fn resolve_pos_static(pos1: &mut Vec2, normal: Vec2, depth: f32) {
     if depth <= 0.0 {
         return;
     }
-    pos1.0 += normal.0 * depth;
-    pos1.1 += normal.1 * depth;
+    *pos1 += normal * depth;
 }

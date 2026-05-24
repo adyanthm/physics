@@ -1,7 +1,6 @@
 use crate::Vec2;
 use crate::aabb::polygon_aabb;
 use crate::sat::{polygon_axes, project_polygon};
-use crate::vectors::{dot, scale, sub};
 struct AABB {
     min: Vec2,
     max: Vec2,
@@ -9,17 +8,16 @@ struct AABB {
 
 impl AABB {
     pub fn visual_swept_bounds(&self, vel: Vec2, dt: f32) -> AABB {
-        let disp_x = vel.0 * dt;
-        let disp_y = vel.1 * dt;
+        let disp = vel * dt;
 
         AABB {
-            min: (
-                self.min.0.min(self.min.0 + disp_x), // self.min means struct AABB's min. not min().
-                self.min.1.min(self.min.1 + disp_y),
+            min: Vec2::new(
+                self.min.x.min(self.min.x + disp.x), // self.min means struct AABB's min. not min().
+                self.min.y.min(self.min.y + disp.y),
             ),
-            max: (
-                self.max.0.max(self.max.0 + disp_x),
-                self.max.1.max(self.max.1 + disp_y),
+            max: Vec2::new(
+                self.max.x.max(self.max.x + disp.x),
+                self.max.y.max(self.max.y + disp.y),
             ),
         }
     }
@@ -40,15 +38,15 @@ pub fn swept_sat(
 ) -> Option<CCDResult> {
     let mut t_first = 0.0;
     let mut t_last: f32 = 1.0;
-    let mut hit_normal = (0.0, 0.0);
+    let mut hit_normal = Vec2::ZERO;
 
-    let rel_disp = scale(sub(vel_a, vel_b), dt);
+    let rel_disp = (vel_a - vel_b) * dt;
 
     for &axis in axes {
         let (min_a, max_a) = project_polygon(axis, poly1);
         let (min_b, max_b) = project_polygon(axis, poly2);
 
-        let speed = dot(rel_disp, axis);
+        let speed = rel_disp.dot(axis);
 
         if speed.abs() < f32::EPSILON {
             if max_b < min_a || max_a < min_b {
@@ -93,23 +91,23 @@ pub fn fast_poly_collide(
 ) -> Option<CCDResult> {
     let (min_x_a, min_y_a, max_x_a, max_y_a) = polygon_aabb(poly1);
     let aabb_a = AABB {
-        min: (min_x_a, min_y_a),
-        max: (max_x_a, max_y_a),
+        min: Vec2::new(min_x_a, min_y_a),
+        max: Vec2::new(max_x_a, max_y_a),
     };
 
     let (min_x_b, min_y_b, max_x_b, max_y_b) = polygon_aabb(poly2);
     let aabb_b = AABB {
-        min: (min_x_b, min_y_b),
-        max: (max_x_b, max_y_b),
+        min: Vec2::new(min_x_b, min_y_b),
+        max: Vec2::new(max_x_b, max_y_b),
     };
 
     let swept_a = aabb_a.visual_swept_bounds(vel_a, dt);
     let swept_b = aabb_b.visual_swept_bounds(vel_b, dt);
 
-    if swept_a.max.0 < swept_b.min.0
-        || swept_b.max.0 < swept_a.min.0
-        || swept_a.max.1 < swept_b.min.1
-        || swept_b.max.1 < swept_a.min.1
+    if swept_a.max.x < swept_b.min.x
+        || swept_b.max.x < swept_a.min.x
+        || swept_a.max.y < swept_b.min.y
+        || swept_b.max.y < swept_a.min.y
     {
         return None;
     }
@@ -117,7 +115,7 @@ pub fn fast_poly_collide(
     let mut axes = polygon_axes(poly1);
     axes.extend(polygon_axes(poly2));
     if let Some(mut result) = swept_sat(poly1, vel_a, poly2, vel_b, &axes, dt) {
-        result.normal = (-result.normal.0, -result.normal.1);
+        result.normal = -result.normal;
         Some(result)
     } else {
         None
