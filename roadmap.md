@@ -34,12 +34,12 @@
 * Cleaner APIs and methods
 * Operator overloading (+, -, *)
 
-6. Transform System
+6. Transform System (Partially Implemented)
 
-* Local-space vs world-space polygons
-* Translation, scaling, rotation systems
+* Engine architecture updated with basic `RigidBody` and `PhysicsWorld`
+* Local-space vs world-space polygons (Implemented for RigidBody)
+* Translation, scaling, rotation systems (Rotation pending)
 * Reusable shapes with transforms
-* Better engine architecture
 
 7. Rotation Support
 

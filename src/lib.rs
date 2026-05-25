@@ -1,4 +1,5 @@
 pub mod aabb;
+pub mod body;
 pub mod ccd;
 pub mod concave;
 pub mod demos;
@@ -6,6 +7,7 @@ pub mod point;
 pub mod sat;
 pub mod vectors;
 pub mod velocity;
+pub mod world;
 pub use aabb::aabb_overlap;
 pub use ccd::fast_poly_collide;
 pub use concave::polygon_concave;

@@ -1,56 +1,35 @@
 use macroquad::prelude::*;
 
-use crate::{Body, Vec2, advanced_collision, resolve_pos_static, resolve_velocity, update};
-
-pub fn rect(pos: Vec2, size: f32) -> Vec<Vec2> {
-    vec![
-        Vec2::new(pos.x, pos.y),
-        Vec2::new(pos.x + size, pos.y),
-        Vec2::new(pos.x + size, pos.y + size),
-        Vec2::new(pos.x, pos.y + size),
-    ]
-}
+use crate::Vec2;
+use crate::body::{BodyType, RigidBody, rect_vertices};
+use crate::world::PhysicsWorld;
 
 pub async fn run() {
-    let mut body = Body {
-        pos: Vec2::new(350.0, 50.0),
-        vel: Vec2::ZERO,
-        use_gravity: true,
-    };
+    let mut world = PhysicsWorld::new();
 
-    let floor = [
+    let box_handle = world.add_body(RigidBody {
+        pos: Vec2::new(350.0, 50.0),
+        vel: Vec2::new(0.0, 0.0),
+        body_type: BodyType::Dynamic,
+        use_gravity: true,
+        restitution: 0.7,
+        vertices: rect_vertices(50.0, 50.0),
+    });
+    world.add_body(RigidBody::new_static(
         Vec2::new(100.0, 500.0),
-        Vec2::new(700.0, 500.0),
-        Vec2::new(700.0, 520.0),
-        Vec2::new(100.0, 520.0),
-    ];
+        rect_vertices(600.0, 20.0),
+    ));
 
     loop {
         clear_background(BLACK);
         let dt = get_frame_time();
-        update(&mut body, dt);
 
-        let player = rect(body.pos, 50.0);
-        let collision = advanced_collision(&player, &floor);
-        if let Some(c) = &collision {
-            resolve_pos_static(&mut body.pos, c.normal, c.depth);
-            resolve_velocity(&mut body.vel, c.normal, 0.7);
+        world.step(dt);
 
-            if c.normal.y < -0.5 {
-                if body.vel.y.abs() < 50.0 {
-                    body.vel.y = 0.0;
-                }
-                body.pos.y -= 0.1;
-            }
-        }
-
-        // player
+        let body = &world.bodies[box_handle];
         draw_rectangle(body.pos.x, body.pos.y, 50.0, 50.0, BLUE);
-
-        // floor
         draw_rectangle(100.0, 500.0, 600.0, 20.0, GRAY);
 
-        // velocity vector
         draw_line(
             body.pos.x + 25.0,
             body.pos.y + 25.0,
@@ -59,19 +38,28 @@ pub async fn run() {
             3.0,
             RED,
         );
-        if let Some(c) = &collision {
+
+        if let Some(c) = world
+            .contacts
+            .iter()
+            .find(|c| c.body_a == box_handle || c.body_b == box_handle)
+        {
+            let normal = if c.body_a == box_handle {
+                c.normal
+            } else {
+                -c.normal
+            };
             draw_line(
                 body.pos.x + 25.0,
                 body.pos.y + 25.0,
-                body.pos.x + 25.0 + c.normal.x * 100.0,
-                body.pos.y + 25.0 + c.normal.y * 100.0,
+                body.pos.x + 25.0 + normal.x * 100.0,
+                body.pos.y + 25.0 + normal.y * 100.0,
                 4.0,
                 YELLOW,
             );
         }
 
-        let vel_text = format!("vel : {:.1?}", body.vel);
-
+        let vel_text = format!("vel : ({:.1}, {:.1})", body.vel.x, body.vel.y);
         draw_text(&vel_text, 20.0, 30.0, 30.0, WHITE);
 
         if is_key_pressed(KeyCode::Escape) {

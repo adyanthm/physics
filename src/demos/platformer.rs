@@ -1,86 +1,72 @@
 use macroquad::prelude::*;
 
-use crate::{Body, Vec2, advanced_collision, resolve_pos_static, resolve_velocity, update};
-
-pub fn rect(pos: Vec2, w: f32, h: f32) -> Vec<Vec2> {
-    vec![
-        Vec2::new(pos.x, pos.y),
-        Vec2::new(pos.x + w, pos.y),
-        Vec2::new(pos.x + w, pos.y + h),
-        Vec2::new(pos.x, pos.y + h),
-    ]
-}
+use crate::Vec2;
+use crate::body::{RigidBody, rect_vertices};
+use crate::world::PhysicsWorld;
 
 pub async fn run() {
     let player_size = 30.0;
     let speed = 400.0;
     let jump_force = 500.0;
 
-    let mut body = Body {
-        pos: Vec2::new(100.0, 100.0),
-        vel: Vec2::ZERO,
-        use_gravity: true,
-    };
+    let mut world = PhysicsWorld::new();
 
-    let platforms = vec![
-        // floor
-        rect(Vec2::new(50.0, 500.0), 750.0, 50.0),
-        // floating platforms
-        rect(Vec2::new(200.0, 400.0), 100.0, 20.0),
-        rect(Vec2::new(400.0, 300.0), 150.0, 20.0),
-        rect(Vec2::new(650.0, 200.0), 100.0, 20.0),
-        // wall
-        rect(Vec2::new(50.0, 100.0), 50.0, 400.0),
-        rect(Vec2::new(750.0, 100.0), 50.0, 400.0),
-    ];
+    let player = world.add_body(RigidBody::new_dynamic(
+        Vec2::new(100.0, 100.0),
+        rect_vertices(player_size, player_size),
+    ));
+
+    world.add_body(RigidBody::new_static(
+        Vec2::new(50.0, 500.0),
+        rect_vertices(750.0, 50.0),
+    ));
+    world.add_body(RigidBody::new_static(
+        Vec2::new(200.0, 400.0),
+        rect_vertices(100.0, 20.0),
+    ));
+    world.add_body(RigidBody::new_static(
+        Vec2::new(400.0, 300.0),
+        rect_vertices(150.0, 20.0),
+    ));
+    world.add_body(RigidBody::new_static(
+        Vec2::new(650.0, 200.0),
+        rect_vertices(100.0, 20.0),
+    ));
+    world.add_body(RigidBody::new_static(
+        Vec2::new(50.0, 100.0),
+        rect_vertices(50.0, 400.0),
+    ));
+    world.add_body(RigidBody::new_static(
+        Vec2::new(750.0, 100.0),
+        rect_vertices(50.0, 400.0),
+    ));
 
     loop {
         clear_background(BLACK);
         let dt = get_frame_time();
 
-        let mut grounded = false;
+        let pb = &mut world.bodies[player];
 
         if is_key_down(KeyCode::Right) || is_key_down(KeyCode::D) {
-            body.vel.x = speed;
+            pb.vel.x = speed;
         } else if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
-            body.vel.x = -speed;
+            pb.vel.x = -speed;
         } else {
-            body.vel.x *= 0.8;
+            pb.vel.x *= 0.9;
         }
 
-        // apply the physics.
-        update(&mut body, dt);
-        let mut player = rect(body.pos, player_size, player_size);
+        world.step(dt);
 
-        // collision : player, platform
-        for platform in &platforms {
-            if let Some(c) = advanced_collision(&player, platform) {
-                resolve_pos_static(&mut body.pos, c.normal, c.depth);
-                resolve_velocity(&mut body.vel, c.normal, 0.0);
-
-                if c.normal.y < -0.5 {
-                    if body.vel.y.abs() < 100.0 {
-                        grounded = true;
-                        body.vel.y = 0.0;
-                    }
-                    body.pos.y -= 0.1;
-                }
-
-                player = rect(body.pos, player_size, player_size);
-            }
+        if is_key_pressed(KeyCode::Space) && world.is_grounded(player) {
+            world.bodies[player].vel.y = -jump_force;
         }
 
-        if is_key_pressed(KeyCode::Space) && grounded {
-            body.vel.y -= jump_force;
-        }
-
-        draw_rectangle(body.pos.x, body.pos.y, player_size, player_size, BLUE);
-
-        for platform in &platforms {
-            let start = platform[0];
-            let width = platform[1].x - platform[0].x;
-            let height = platform[3].y - platform[0].y;
-            draw_rectangle(start.x, start.y, width, height, GRAY);
+        for (i, body) in world.bodies.iter().enumerate() {
+            let verts = body.world_vertices();
+            let w = verts[1].x - verts[0].x;
+            let h = verts[3].y - verts[0].y;
+            let color = if i == player { BLUE } else { GRAY };
+            draw_rectangle(body.pos.x, body.pos.y, w, h, color);
         }
 
         draw_text("Platformer Demo", 20.0, 30.0, 30.0, WHITE);

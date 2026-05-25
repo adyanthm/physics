@@ -12,7 +12,9 @@ src/
   sat.rs       — separating axis theorem (convex), MTV calculation
   concave.rs   — concave polygon collision (vertex containment + edge intersection)
   point.rs     — point-in-polygon via ray casting
-  velocity.rs  — body physics, gravity, and velocity resolution
+  velocity.rs  — basic physics math
+  body.rs      — RigidBody definitions and types (Dynamic, Static)
+  world.rs     — PhysicsWorld for managing bodies and stepping the simulation
   demos/       — interactive examples (platformer, falling box)
   main.rs      — graphical sandbox entry point
 ```
