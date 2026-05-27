@@ -143,3 +143,15 @@ if point_in_polygon(mouse_pos, &shape_a) {
     println!("Mouse is inside the shape!");
 }
 ```
+
+### 9. High-Velocity Objects and CCD
+The engine automatically handles extremely fast objects using Continuous Collision Detection (CCD). By default, if a body moves faster than 575 pixels/second (enough to tunnel through a small shape in a 60fps frame), it will use swept-SAT to prevent it from ghosting through walls. No setup is required.
+
+### 10. Body Sleeping
+Objects that come to rest will automatically "go to sleep" after 0.5 seconds. Sleeping bodies skip physics processing, which improves performance and mathematically eliminates micro-jitter in stacked piles. They wake up instantly when hit by an active object.
+
+```rust
+// You can manually wake up a sleeping body
+world.bodies[box_id].awake = true;
+world.bodies[box_id].sleep_timer = 0.0;
+```

@@ -1,18 +1,18 @@
-1. Swept / Continuous Collision Detection
+1. Swept / Continuous Collision Detection (Completed)
 
 * Prevent fast objects from tunneling through walls
 * Detect collision over time instead of per-frame overlap
 * Time-of-impact calculations
 * Stable high-speed collisions
 
-2. Contact Points
+2. Contact Points (Completed)
 
 * Calculate exact collision points
 * More accurate collision response
 * Needed for realistic physics
 * Foundation for friction and stable stacking
 
-3. Impulse Resolution
+3. Impulse Resolution (Completed)
 
 * Apply forces after collision
 * Realistic bouncing
@@ -27,21 +27,21 @@
 * Bounding Volume Hierarchies (BVH)
 * Avoid O(n²) collision scaling
 
-5. Better Geometry Types
+5. Better Geometry Types (Completed)
 
 * Replace tuple vectors with proper Vec2 struct
 * Add Circle, Polygon, AABB structs
 * Cleaner APIs and methods
 * Operator overloading (+, -, *)
 
-6. Transform System (Partially Implemented)
+6. Transform System (Completed)
 
 * Engine architecture updated with basic `RigidBody` and `PhysicsWorld`
 * Local-space vs world-space polygons (Implemented for RigidBody)
 * Translation, scaling, rotation systems (Rotation pending)
 * Reusable shapes with transforms
 
-7. Rotation Support
+7. Rotation Support (Completed)
 
 * Rotating polygons
 * Rotation matrices

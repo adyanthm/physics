@@ -36,6 +36,14 @@ impl Vec2 {
     pub fn perp(self) -> Vec2 {
         Vec2::new(-self.y, self.x)
     }
+
+    pub fn cross_scalar(self, s: f32) -> Vec2 {
+        Vec2::new(-s * self.y, s * self.x)
+    }
+
+    pub fn magnitude_sq(self) -> f32 {
+        self.x * self.x + self.y * self.y
+    }
 }
 
 impl Add for Vec2 {

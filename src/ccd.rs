@@ -12,7 +12,7 @@ impl AABB {
 
         AABB {
             min: Vec2::new(
-                self.min.x.min(self.min.x + disp.x), // self.min means struct AABB's min. not min().
+                self.min.x.min(self.min.x + disp.x),
                 self.min.y.min(self.min.y + disp.y),
             ),
             max: Vec2::new(
@@ -24,7 +24,7 @@ impl AABB {
 }
 
 pub struct CCDResult {
-    pub toi: f32, // time of impact (0-1)
+    pub toi: f32,
     pub normal: Vec2,
 }
 

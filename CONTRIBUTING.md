@@ -12,9 +12,10 @@ src/
   sat.rs       — separating axis theorem (convex), MTV calculation
   concave.rs   — concave polygon collision (vertex containment + edge intersection)
   point.rs     — point-in-polygon via ray casting
-  velocity.rs  — basic physics math
+  ccd.rs       — continuous collision detection (swept SAT)
+  velocity.rs  — physics math (sequential impulse solver, baumgarte)
   body.rs      — RigidBody definitions and types (Dynamic, Static)
-  world.rs     — PhysicsWorld for managing bodies and stepping the simulation
+  world.rs     — PhysicsWorld (sleeping, CCD step, integration)
   demos/       — interactive examples (platformer, falling box)
   main.rs      — graphical sandbox entry point
 ```
@@ -46,6 +47,18 @@ SAT only works on convex shapes. For concave polygons, `concave.rs` uses three c
 3. Do any edges of A cross any edges of B? (segment intersection)
 
 If any of those is true, the shapes collide.
+
+## Sequential Impulses and Baumgarte
+
+Instead of solving collision forces once, the engine runs the velocity solver 8 times per frame. This iterative approach allows forces to propagate through stacked objects naturally. To fix positional overlaps, we use Baumgarte Stabilization (`velocity.rs`), applying "pseudo-velocities" that gently push overlapping shapes apart without adding artificial momentum.
+
+## Body Sleeping
+
+To eliminate micro-jitter and save CPU, `world.rs` tracks how long a body has been idle. After 0.5s of low velocity, the body goes to sleep (`awake = false`) and skips physics integration until an awake object hits it.
+
+## Continuous Collision Detection (CCD)
+
+Fast-moving objects can tunnel through thin walls in a single `1/60s` frame. If an object is moving faster than the escape velocity (e.g., 575px/s), `world.rs` runs a swept-SAT check (`ccd.rs`) to find the exact Time of Impact (TOI) and bounces the object before it ever overlaps.
 
 ## Making changes
 

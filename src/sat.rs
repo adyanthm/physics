@@ -3,7 +3,9 @@ use crate::{Vec2, aabb_overlap};
 pub struct Collision {
     pub normal: Vec2,
     pub depth: f32,
+    pub contacts: Vec<Vec2>,
 }
+
 pub fn project_polygon(axis: Vec2, polygon: &[Vec2]) -> (f32, f32) {
     if polygon.is_empty() {
         return (0.0, 0.0);
@@ -45,7 +47,6 @@ pub fn polygon_collision(poly1: &[Vec2], poly2: &[Vec2]) -> bool {
             return false;
         }
     }
-
     true
 }
 
@@ -57,8 +58,106 @@ fn polygon_center(polygon: &[Vec2]) -> Vec2 {
     for &v in polygon {
         total += v;
     }
-
     total / polygon.len() as f32
+}
+
+fn best_edge(polygon: &[Vec2], normal: Vec2) -> (Vec2, Vec2) {
+    let mut max_dot = -f32::INFINITY;
+    let mut best_idx = 0;
+    for i in 0..polygon.len() {
+        let d = polygon[i].dot(normal);
+        if d > max_dot {
+            max_dot = d;
+            best_idx = i;
+        }
+    }
+
+    let prev_idx = if best_idx == 0 {
+        polygon.len() - 1
+    } else {
+        best_idx - 1
+    };
+    let next_idx = (best_idx + 1) % polygon.len();
+
+    let v_best = polygon[best_idx];
+    let v_prev = polygon[prev_idx];
+    let v_next = polygon[next_idx];
+
+    let edge_prev = (v_best - v_prev).normalize();
+    let edge_next = (v_next - v_best).normalize();
+
+    if edge_prev.dot(normal) <= edge_next.dot(normal) {
+        (v_prev, v_best)
+    } else {
+        (v_best, v_next)
+    }
+}
+
+fn clip(v1: Vec2, v2: Vec2, n: Vec2, o: f32) -> Vec<Vec2> {
+    let mut cp = Vec::new();
+    let d1 = n.dot(v1) - o;
+    let d2 = n.dot(v2) - o;
+
+    if d1 >= 0.0 {
+        cp.push(v1);
+    }
+    if d2 >= 0.0 {
+        cp.push(v2);
+    }
+    if d1 * d2 < 0.0 {
+        let t = d1 / (d1 - d2);
+        cp.push(v1 + (v2 - v1) * t);
+    }
+    cp
+}
+
+fn compute_contact_points(poly1: &[Vec2], poly2: &[Vec2], normal: Vec2) -> Vec<Vec2> {
+    let (e1_v1, e1_v2) = best_edge(poly1, -normal);
+    let (e2_v1, e2_v2) = best_edge(poly2, normal);
+
+    let ref_edge;
+    let inc_edge;
+    let mut flip = false;
+
+    if (e1_v2 - e1_v1).normalize().dot(normal).abs()
+        <= (e2_v2 - e2_v1).normalize().dot(normal).abs()
+    {
+        ref_edge = (e1_v1, e1_v2);
+        inc_edge = (e2_v1, e2_v2);
+    } else {
+        ref_edge = (e2_v1, e2_v2);
+        inc_edge = (e1_v1, e1_v2);
+        flip = true;
+    }
+
+    let ref_v = (ref_edge.1 - ref_edge.0).normalize();
+    let o1 = ref_v.dot(ref_edge.0);
+    let cp = clip(inc_edge.0, inc_edge.1, ref_v, o1);
+    if cp.len() < 2 {
+        return vec![(ref_edge.0 + ref_edge.1 + inc_edge.0 + inc_edge.1) * 0.25];
+    }
+
+    let o2 = ref_v.dot(ref_edge.1);
+    let cp = clip(cp[0], cp[1], -ref_v, -o2);
+    if cp.len() < 2 {
+        return vec![(ref_edge.0 + ref_edge.1 + inc_edge.0 + inc_edge.1) * 0.25];
+    }
+
+    let ref_normal = if flip { normal } else { -normal };
+    let max_depth = ref_normal.dot(ref_edge.0);
+
+    let mut valid_cp = Vec::new();
+    for v in cp {
+        if ref_normal.dot(v) - max_depth <= 0.1 {
+            valid_cp.push(v);
+        }
+    }
+
+    if valid_cp.is_empty() {
+        return vec![(ref_edge.0 + ref_edge.1 + inc_edge.0 + inc_edge.1) * 0.25];
+    }
+
+    valid_cp
 }
 
 pub fn advanced_collision(poly1: &[Vec2], poly2: &[Vec2]) -> Option<Collision> {
@@ -84,19 +183,34 @@ pub fn advanced_collision(poly1: &[Vec2], poly2: &[Vec2]) -> Option<Collision> {
     if direction.dot(smallest_axis) > 0.0 {
         smallest_axis = -smallest_axis;
     }
+
+    let contacts = compute_contact_points(poly1, poly2, smallest_axis);
+
     Some(Collision {
         normal: smallest_axis,
         depth: smallest_overlap,
+        contacts,
     })
 }
 
-pub fn resolve_pos(pos1: &mut Vec2, pos2: &mut Vec2, normal: Vec2, depth: f32) {
+pub fn resolve_pos(
+    pos1: &mut Vec2,
+    pos2: &mut Vec2,
+    normal: Vec2,
+    depth: f32,
+    inv_mass1: f32,
+    inv_mass2: f32,
+) {
     if depth <= 0.0 {
         return;
     }
-    let correction = normal * depth;
-    *pos1 += correction * 0.5;
-    *pos2 -= correction * 0.5;
+    let total_inv_mass = inv_mass1 + inv_mass2;
+    if total_inv_mass == 0.0 {
+        return;
+    }
+    let correction = normal * (depth / total_inv_mass);
+    *pos1 += correction * inv_mass1;
+    *pos2 -= correction * inv_mass2;
 }
 
 pub fn resolve_pos_static(pos1: &mut Vec2, normal: Vec2, depth: f32) {

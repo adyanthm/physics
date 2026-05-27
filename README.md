@@ -14,6 +14,11 @@ Originally prototyped in Python (`/python`), now being rewritten in Rust for per
 - **Point-in-polygon** — ray casting to test if a point is inside a shape
 - **Concave collision** — vertex containment + edge intersection for non-convex shapes
 - **RigidBody Dynamics** — world-based simulation with static and dynamic bodies
+- **Contact Points** — generates exact collision manifolds for realistic friction and bouncing
+- **Iterative Solver** — sequential impulse solver (8 passes) for perfectly stable stacking
+- **Baumgarte Stabilization** — corrects position overlaps cleanly using pseudo-velocities
+- **Body Sleeping** — automatically freezes idle shapes to save CPU and eliminate micro-jitter
+- **Swept-SAT CCD** — continuous collision detection prevents high-speed objects from tunneling
 
 ## Try it
 
@@ -38,11 +43,11 @@ See [roadmap.md](roadmap.md) for the full plan. Short version:
 - [x] Collision resolution (push objects apart using MTV)
 - [x] Velocity, gravity, basic integration
 - [x] Basic RigidBody & PhysicsWorld architecture
-- [ ] Continuous collision detection (prevent tunneling)
-- [ ] Contact points and impulse resolution
+- [x] Continuous collision detection (prevent tunneling)
+- [x] Contact points and impulse resolution
 - [ ] Spatial partitioning (quadtree / grid)
-- [ ] Proper `Vec2` struct with operator overloading
-- [ ] Rotation and angular velocity
+- [x] Proper `Vec2` struct with operator overloading
+- [x] Rotation and angular velocity
 
 ## License
 

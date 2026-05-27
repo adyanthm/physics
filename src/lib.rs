@@ -14,7 +14,7 @@ pub use concave::polygon_concave;
 pub use point::point_polygon;
 pub use sat::{Collision, advanced_collision, polygon_collision, resolve_pos, resolve_pos_static};
 pub use vectors::Vec2;
-pub use velocity::{Body, GRAVITY, resolve_velocity, update};
+pub use velocity::resolve_collision;
 
 #[cfg(test)]
 mod tests {
@@ -22,19 +22,19 @@ mod tests {
 
     fn square() -> Vec<Vec2> {
         vec![
-            Vec2::new(0.0, 0.0),
-            Vec2::new(4.0, 0.0),
-            Vec2::new(4.0, 4.0),
-            Vec2::new(0.0, 4.0),
+            Vec2::new(-2.0, -2.0),
+            Vec2::new(2.0, -2.0),
+            Vec2::new(2.0, 2.0),
+            Vec2::new(-2.0, 2.0),
         ]
     }
 
     fn offset_square() -> Vec<Vec2> {
         vec![
-            Vec2::new(3.0, 1.0),
-            Vec2::new(7.0, 1.0),
-            Vec2::new(7.0, 5.0),
-            Vec2::new(3.0, 5.0),
+            Vec2::new(1.0, -1.0),
+            Vec2::new(5.0, -1.0),
+            Vec2::new(5.0, 3.0),
+            Vec2::new(1.0, 3.0),
         ]
     }
 
@@ -58,8 +58,6 @@ mod tests {
         ]
     }
 
-    // --- Vec2 ---
-
     #[test]
     fn dot_perpendicular_is_zero() {
         assert_eq!(Vec2::new(1.0, 0.0).dot(Vec2::new(0.0, 1.0)), 0.0);
@@ -82,11 +80,9 @@ mod tests {
         assert_eq!(Vec2::ZERO.normalize(), Vec2::ZERO);
     }
 
-    // --- point_polygon ---
-
     #[test]
     fn point_inside() {
-        assert!(point_polygon(Vec2::new(2.0, 2.0), &square()));
+        assert!(point_polygon(Vec2::new(0.0, 0.0), &square()));
     }
 
     #[test]
@@ -96,15 +92,13 @@ mod tests {
 
     #[test]
     fn point_on_edge() {
-        assert!(!point_polygon(Vec2::new(4.0, 2.0), &square()));
+        assert!(!point_polygon(Vec2::new(2.0, 0.0), &square()));
     }
 
     #[test]
     fn point_empty_polygon() {
         assert!(!point_polygon(Vec2::ZERO, &[]));
     }
-
-    // --- aabb_overlap ---
 
     #[test]
     fn aabb_overlapping() {
@@ -121,8 +115,6 @@ mod tests {
         assert!(!aabb_overlap(&square(), &[]));
     }
 
-    // --- polygon_collision (convex, sat) ---
-
     #[test]
     fn sat_colliding() {
         assert!(polygon_collision(&square(), &offset_square()));
@@ -138,8 +130,6 @@ mod tests {
         assert!(polygon_collision(&square(), &square()));
     }
 
-    // --- advanced_collision (MTV) ---
-
     #[test]
     fn mtv_returns_collision() {
         let result = advanced_collision(&square(), &offset_square());
@@ -149,7 +139,8 @@ mod tests {
 
     #[test]
     fn mtv_resolves_overlap() {
-        let Collision { normal, depth } = advanced_collision(&square(), &offset_square()).unwrap();
+        let Collision { normal, depth, .. } =
+            advanced_collision(&square(), &offset_square()).unwrap();
         let resolved: Vec<Vec2> = square().iter().map(|&v| v + normal * depth).collect();
         assert!(!polygon_collision(&resolved, &offset_square()));
     }
@@ -158,8 +149,6 @@ mod tests {
     fn mtv_no_collision() {
         assert!(advanced_collision(&square(), &far_square()).is_none());
     }
-
-    // --- polygon_concave ---
 
     #[test]
     fn concave_colliding() {
