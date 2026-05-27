@@ -23,11 +23,10 @@ pub async fn run() {
     world.add_body(floor);
 
     let mut box_body = RigidBody::new_dynamic(Vec2::new(400.0, 100.0), rect_vertices(50.0, 50.0));
-    box_body.restitution = 0.7;
+    box_body.restitution = 0.6;
     box_body.angle = std::f32::consts::PI / 6.0;
     box_body.angular_vel = 2.0;
     let box_id = world.add_body(box_body);
-
     loop {
         clear_background(BLACK);
         world.step(1.0 / 60.0);

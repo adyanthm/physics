@@ -118,7 +118,7 @@ pub async fn run() {
                     RigidBody::new_dynamic(anchor, regular_polygon(15.0, 16, 0.0));
                 cannonball.inv_mass *= 0.1;
                 cannonball.inv_inertia *= 0.1;
-                cannonball.restitution = 0.5;
+                cannonball.restitution = 0.6;
                 cannonball.vel = velocity;
 
                 let cb_id = world.add_body(cannonball);

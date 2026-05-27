@@ -27,7 +27,7 @@ pub fn resolve_collision(
         + rb_cross_n * rb_cross_n * body_b.inv_inertia;
 
     if vel_along_normal <= 0.0 {
-        let mut e = body_a.restitution.min(body_b.restitution);
+        let mut e = body_a.restitution.max(body_b.restitution);
 
         if vel_along_normal > -30.0 {
             e = 0.0;
